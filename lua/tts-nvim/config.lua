@@ -3,6 +3,7 @@ M = {}
 M.opts = {
     voice = "en-GB-SoniaNeural",
     speed = 1.0,
+    python_path = "python3",  -- Path to Python interpreter
 }
 
 M.setup_config = function(opts)

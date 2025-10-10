@@ -37,9 +37,39 @@ Lazy:
     opts = {
         voice = "en-GB-SoniaNeural",
         speed = 1.0,
+        python_path = "python3",  -- Path to Python interpreter (default: "python3")
     },
 },
 
+```
+
+## Configuration Options
+
+### Using a Custom Python Path
+
+If you're using a virtual environment or a specific Python installation, you can configure the `python_path` option:
+
+```lua
+-- For virtual environment
+opts = {
+    python_path = "/home/user/.venv/bin/python",
+    voice = "en-GB-SoniaNeural",
+    speed = 1.0,
+}
+
+-- For conda environment
+opts = {
+    python_path = "/home/user/miniconda3/envs/myenv/bin/python",
+    voice = "en-GB-SoniaNeural",
+    speed = 1.0,
+}
+
+-- For Windows
+opts = {
+    python_path = "C:\\Python311\\python.exe",
+    voice = "en-GB-SoniaNeural",
+    speed = 1.0,
+}
 ```
 
 ## List voices

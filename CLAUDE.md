@@ -56,8 +56,9 @@ The Lua components work together to integrate TTS into Neovim:
   - Exposes `setup()` for configuration
 
 - **lua/tts-nvim/config.lua**: Configuration management
-  - Default settings: `voice = "en-GB-SoniaNeural"`, `speed = 1.0`
+  - Default settings: `voice = "en-GB-SoniaNeural"`, `speed = 1.0`, `python_path = "python3"`
   - Merges user options with defaults during setup
+  - `python_path` allows users to specify custom Python interpreter (e.g., for virtual environments)
 
 - **lua/tts-nvim/util.lua**: Visual selection utilities
   - `getVisualSelection()`: Captures visual selection coordinates
@@ -86,10 +87,15 @@ Errors from the Python script are captured via stderr callback in `lua/tts-nvim/
 
 ## Important Implementation Details
 
-1. **Python Script Path Resolution**: The plugin dynamically determines the Python script path using `debug.getinfo()` relative to the Lua module location (`init.lua:11,29`).
+1. **Python Script Execution**:
+   - The plugin dynamically determines the Python script path using `debug.getinfo()` relative to the Lua module location (`init.lua:11,29`)
+   - Uses the configured `python_path` (default: "python3") to execute the script
+   - The Python interpreter is called with the script path as the first argument, followed by TTS parameters
 
 2. **Visual Selection Handling**: The plugin properly handles both single-line and multi-line visual selections, extracting the exact selected text including partial line selections.
 
 3. **Async Execution**: TTS operations run asynchronously using plenary.nvim's Job API, preventing Neovim from blocking during audio playback.
 
 4. **Speed Parameter**: The speed value is user-friendly (1.0 = normal, 1.5 = 50% faster) and gets converted to edge-tts's percentage format internally.
+
+5. **Python Path Configuration**: Users can specify a custom Python interpreter path to support virtual environments, conda environments, or specific Python installations. This is crucial for environments where the default `python3` command may not have the required `edge-tts` package installed.

@@ -10,8 +10,8 @@ M.tts = function()
 
     local pythonScriptPath = debug.getinfo(1, "S").source:sub(2):gsub("lua/tts%-nvim/init%.lua", "tts.py")
     local job = Job:new({
-        command = pythonScriptPath,
-        args = {search_string, config.opts.voice, config.opts.speed},
+        command = config.opts.python_path,
+        args = {pythonScriptPath, search_string, config.opts.voice, config.opts.speed},
         cwd = ".",
         on_stderr = function(_, data)
             if data ~= nil then
@@ -28,8 +28,8 @@ M.tts_to_file = function()
 
     local pythonScriptPath = debug.getinfo(1, "S").source:sub(2):gsub("lua/tts%-nvim/init%.lua", "tts.py")
     local job = Job:new({
-        command = pythonScriptPath,
-        args = {search_string, config.opts.voice, config.opts.speed, "tts.mp3"},
+        command = config.opts.python_path,
+        args = {pythonScriptPath, search_string, config.opts.voice, config.opts.speed, "tts.mp3"},
         cwd = ".",
         on_stderr = function(_, data)
             if data ~= nil then
