@@ -1,6 +1,6 @@
-# Text-to-speech in neovim
+# Text-to-speech in Neovim
 
-Read your visual selection using the [edge-tts](https://github.com/rany2/edge-tts) python library.
+Read your visual selection using multiple TTS backends including [edge-tts](https://github.com/rany2/edge-tts), [Piper](https://github.com/OHF-Voice/piper1-gpl), and [OpenAI TTS](https://platform.openai.com/docs/guides/text-to-speech).
 
 "TTS" command reads the visual selection using `ffplay`, while "TTSFile" outputs the audio to a file.
 
@@ -9,6 +9,8 @@ https://github.com/user-attachments/assets/f331db4b-ace3-475d-8423-e5e3df81083b
 
 # Dependencies
 
+## Required (All backends)
+
 - ffplay
 ```bash
 sudo apt install ffmpeg
@@ -16,6 +18,11 @@ sudo apt install ffmpeg
 ```bash
 sudo pacman -S ffmpeg
 ```
+- plenary.nvim
+
+## Backend-specific Dependencies
+
+### Edge TTS (default backend)
 - edge-tts
 ```bash
 pip install edge-tts
@@ -23,24 +30,116 @@ pip install edge-tts
 ```bash
 yay -S python-edge-tts
 ```
-- plenary.nvim
+
+### Piper
+- piper-tts
+```bash
+pip install piper-tts
+```
+```bash
+yay -S piper-tts # this conflicts with the pacman piper package
+```
+Or install from source: [Piper Installation](https://github.com/OHF-Voice/piper1-gpl)
+
+### OpenAI TTS
+- openai Python package
+```bash
+pip install openai
+```
+- OpenAI API key (set as `OPENAI_API_KEY` environment variable)
+
+## Optional (for syntax removal)
+
+- **pandoc**: For pandoc-based syntax removal. Only required if using `syntax_removal_method = "pandoc"`.
+```bash
+sudo apt install pandoc
+```
+```bash
+sudo pacman -S pandoc
+```
+
+# Features
+
+## Multiple TTS Backends
+
+The plugin supports three TTS backends:
+
+1. **Edge TTS** (default): Free, cloud-based Microsoft Edge TTS with many voices
+2. **Piper**: Fast, local, open-source neural TTS
+3. **OpenAI TTS**: High-quality cloud-based TTS (requires API key)
+
+Configure the backend in your setup:
+
+```lua
+require("tts-nvim").setup({
+    backend = "edge", -- "edge", "piper", or "openai"
+})
+```
+
+## Syntax Removal
+
+The plugin can remove syntax from Markdown and LaTeX files before reading them aloud. This ensures that the TTS engine speaks only the actual text content, without markup symbols like `#`, `*`, `\textbf{}`, etc.
+
+Two methods are supported:
+
+1. **Simple** (default): Uses pattern-based regex to remove common markdown and LaTeX syntax. Works without any external dependencies.
+2. **Pandoc**: Uses pandoc to convert Markdown/LaTeX to plain text. Requires pandoc to be installed. Falls back to simple method if pandoc fails.
+
+To enable syntax removal, set `remove_syntax = true` in your configuration:
+
+```lua
+require("tts-nvim").setup({
+    remove_syntax = true,
+    syntax_removal_method = "pandoc", -- or "simple"
+})
+```
 
 # Installation
 
-Lazy:
+## Lazy
 
 ```lua
 {
     "johannww/tts.nvim",
-    cmd = { "TTS", "TTSFile" },
+    cmd = { "TTS", "TTSFile", "TTSSetLanguage", "TTSSetBackend" },
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
-        voice = "en-GB-SoniaNeural",
+        backend = "edge", -- "edge", "openai", or "piper"
+        language = "en",
         speed = 1.0,
         python_path = "python3",  -- Path to Python interpreter (default: "python3")
+        remove_syntax = false,
+        syntax_removal_method = "pandoc",
+        languages_to_voice = {
+            edge = {
+                ["en"] = "en-GB-SoniaNeural",
+                ["pt"] = "pt-BR-AntonioNeural",
+                ["es"] = "es-ES-ElviraNeural",
+                ["fr"] = "fr-FR-DeniseNeural",
+                ["de"] = "de-DE-KatjaNeural",
+                ["it"] = "it-IT-ElsaNeural",
+                ["ja"] = "ja-JP-NanamiNeural",
+                ["zh"] = "zh-CN-XiaoxiaoNeural",
+            },
+            piper = {
+                ["en"] = "en_US-lessac-medium",
+                ["pt"] = "pt_BR-faber-medium",
+                ["es"] = "es_ES-sharvard-medium",
+                ["fr"] = "fr_FR-siwis-medium",
+                ["de"] = "de_DE-thorsten-medium",
+                ["it"] = "it_IT-riccardo-x_low",
+                ["ja"] = "ja_JP-haruka-medium",
+                ["zh"] = "zh_CN-huayan-medium",
+            },
+            -- OpenAI uses the same voice for all languages
+            -- Configure in openai option below
+        },
+        openai = {
+            voice = "alloy", -- Available: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer
+            model = "tts-1", -- "tts-1" or "tts-1-hd"
+        },
     },
-},
-
+}
 ```
 
 ## Configuration Options
@@ -73,6 +172,9 @@ opts = {
 ```
 
 ## List voices
+## Backend-Specific Configuration
+
+### Edge TTS - List Available Voices
 
 ```bash
 python -m edge_tts --list-voices
@@ -414,3 +516,60 @@ zu-ZA-ThandoNeural
 ```
 
 </details>
+
+### Piper - Available Models
+
+Piper models need to be downloaded before use. See [Piper documentation](https://github.com/OHF-Voice/piper1-gpl) for a full list of available voices.
+
+Common models:
+- `en_US-lessac-medium` (default, good quality)
+- `en_US-lessac-high` (higher quality, slower)
+- `en_GB-alan-medium` (British English)
+- `en_US-amy-medium` (Female voice)
+
+Models are downloaded automatically to the nvim data directory (`~/.local/share/nvim/tts-nvim/piper_voices/`).
+
+### OpenAI TTS - Available Voices
+
+OpenAI TTS offers 10 voices with different characteristics:
+
+- **alloy**: Neutral and balanced
+- **ash**: Clear and articulate
+- **ballad**: Warm and expressive
+- **coral**: Friendly and engaging
+- **echo**: Male, clear and articulate
+- **fable**: British accent, expressive
+- **nova**: Female, warm and engaging
+- **onyx**: Deep male voice
+- **sage**: Wise and measured
+- **shimmer**: Female, soft and gentle
+
+Models:
+- `tts-1`: Standard quality, faster
+- `tts-1-hd`: Higher quality, slightly slower
+
+No pre-download required - voices are accessed via API.
+
+# Usage
+
+## Commands
+
+The plugin provides the following commands:
+
+- **`:TTS`** - Read the visual selection aloud using the configured backend
+- **`:TTSFile`** - Save the visual selection as an audio file (tts.mp3)
+- **`:TTSSetLanguage <lang>`** - Set the language for TTS (e.g., `:TTSSetLanguage en`)
+- **`:TTSSetBackend <backend>`** - Switch TTS backend (e.g., `:TTSSetBackend piper`)
+
+## Example Workflow
+
+1. Select text in visual mode
+2. Run `:TTS` to hear it spoken
+3. Or run `:TTSFile` to save it as an audio file
+
+To switch backends during a session:
+```vim
+:TTSSetBackend piper
+:TTSSetBackend openai
+:TTSSetBackend edge
+```
